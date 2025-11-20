@@ -1,511 +1,505 @@
-<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Finanzas</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
-            text-align: center;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        /* Estilos del área de juego */
-        #game-container {
-            width: 400px;
-            height: 600px;
-            background-color: #70c5ce; /* Cielo azul */
-            border: 5px solid #333;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        /* Estilos del pájaro */
-        #bird {
-            width: 30px;
-            height: 30px;
-            background-color: #ffeb3b; /* Amarillo */
-            border-radius: 50%;
-            border: 2px solid #e2a500;
-            position: absolute;
-            left: 50px;
-            transition: top 0.05s linear; /* Para una caída más suave */
-        }
-
-        /* Estilos de las tuberías (Pipes) */
-        .pipe {
-            position: absolute;
-            width: 50px;
-            background-color: #74bf2e;
-            border: 2px solid #3e7b14;
-        }
-
-        .pipe-top {
-            top: 0;
-        }
-
-        .pipe-bottom {
-            bottom: 0;
-        }
-
-        #score-display {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 2em;
-            color: white;
-            text-shadow: 2px 2px 4px #000;
-            z-index: 10;
-        }
-
-        #start-message, #game-over {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            z-index: 20;
-        }
-
-        /* Estilos del Modal de Preguntas */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 100;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.8);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto;
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 450px;
-            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.5);
-            animation: fadeIn 0.5s;
-            color: #333;
-        }
-        .quiz-option {
-            text-align: left;
-            margin: 10px 0;
-        }
-        .quiz-option label {
-            display: block;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .quiz-option label:hover {
-            background-color: #e9ecef;
-        }
-        #feedback {
-            margin-top: 15px;
-            font-weight: bold;
-        }
-        .correct { color: green; }
-        .incorrect { color: red; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flappy Bird con Tailwind - Mejorado</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+  />
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: linear-gradient(to bottom, #70c5ce, #5dade2);
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+    }
+    #gameCanvas {
+      display: block;
+      margin: 0 auto;
+      background: #70c5ce;
+      border: 3px solid #333;
+      border-radius: 12px;
+      max-width: 100vw;
+      height: 600px;
+      width: 400px;
+      touch-action: manipulation;
+      position: relative;
+      z-index: 0;
+    }
+    @media (max-width: 440px) {
+      #gameCanvas {
+        width: 100vw;
+        height: calc(100vw * 1.5);
+      }
+    }
+    /* Estilos para la pantalla de game over */
+    #gameOverScreen {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.85);
+      border-radius: 16px;
+      padding: 2rem 3rem;
+      color: #f87171; /* rojo claro */
+      font-weight: 900;
+      font-size: 2rem;
+      text-align: center;
+      width: 90%;
+      max-width: 320px;
+      box-shadow: 0 0 20px #f87171;
+      user-select: none;
+      display: none;
+      z-index: 10;
+    }
+    #gameOverScreen button {
+      margin-top: 1.5rem;
+      background-color: #f87171;
+      color: white;
+      font-weight: 700;
+      padding: 0.75rem 1.5rem;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 8px rgb(248 113 113 / 0.6);
+    }
+    #gameOverScreen button:hover {
+      background-color: #ef4444;
+      box-shadow: 0 6px 12px rgb(239 68 68 / 0.8);
+    }
+  </style>
 </head>
-<body>
+<body class="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-b from-sky-400 to-blue-600 relative">
 
-    <h1>🐦 Flappy Finanzas: Pasa 2 Tuberías para la Pregunta 🧠</h1>
+  <h1 class="text-white text-4xl font-extrabold mb-6 select-none">Flappy Bird - Juego</h1>
 
-    <div id="game-container">
-        <div id="bird"></div>
-        <div id="score-display">Puntos: 0</div>
-        <div id="start-message">Haz click para empezar y saltar.</div>
-        <div id="game-over" style="display: none;">¡Juego Terminado! Click para reiniciar.</div>
+  <div class="relative">
+    <canvas id="gameCanvas" width="400" height="600" aria-label="Juego Flappy Bird"></canvas>
+
+    <div id="gameOverScreen" role="alert" aria-live="assertive" aria-atomic="true" aria-hidden="true">
+      <div>¡Juego terminado!</div>
+      <div class="mt-2 text-lg font-semibold text-red-300">Tu puntuación final es: <span id="finalScore">0</span></div>
+      <button id="restartBtn" aria-label="Reiniciar juego">Jugar de nuevo</button>
     </div>
+  </div>
 
-    <div id="questions-completed">Preguntas contestadas: 0 / 10</div>
-
-    <div id="quiz-modal" class="modal">
-        <div class="modal-content">
-            <h2>Pregunta Financiera N°<span id="q-number"></span></h2>
-            <p id="q-text">Cargando pregunta...</p>
-
-            <form id="quiz-form">
-                <div id="q-options-container">
-                    </div>
-                <button type="submit" id="submit-answer">Responder</button>
-            </form>
-            <div id="feedback"></div>
-        </div>
+  <div class="mt-6 flex flex-col items-center space-y-4">
+    <button
+      id="startBtn"
+      class="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold rounded-lg shadow-lg transition"
+      aria-label="Iniciar juego"
+    >
+      Iniciar Juego
+    </button>
+    <div class="text-white text-lg font-semibold select-none" aria-live="polite" aria-atomic="true">
+      Puntuación: <span id="score">0</span>
     </div>
+  </div>
 
-    <script>
-        // --- 1. Definición de Preguntas ---
-        const questions = [
-            {
-                q: "¿Qué herramienta oficial del BCRA usas para revisar la situación de deuda de una persona?",
-                options: ["CUIT Online", "Consulta de Deuda del BCRA", "Registro de la Propiedad"],
-                answer: 1 // Índice de la respuesta correcta (empezando en 0)
-            },
-            {
-                q: "¿Cuál de estos NO es un tipo de Swap financiero?",
-                options: ["Swap de Divisas", "Swap de Tasas de Interés", "Swap de Inmuebles"],
-                answer: 2
-            },
-            {
-                q: "Si la persona a la que quieres prestar dinero tiene deudas importantes o atrasos, ¿qué indica?",
-                options: ["Bajo riesgo de no cobro", "Riesgo alto de no cobro", "Que la tasa de interés bajó"],
-                answer: 1
-            },
-            {
-                q: "¿Para qué sirve el CUIT Online además de verificar el número de CUIT?",
-                options: ["Para ver su saldo bancario.", "Para consultar su actividad y estado fiscal.", "Para enviar un mail."],
-                answer: 1
-            },
-            {
-                q: "Un Swap de Divisas implica el intercambio de flujos de dinero en...",
-                options: ["La misma moneda", "Diferentes monedas", "Solo en pesos argentinos"],
-                answer: 1
-            },
-            {
-                q: "¿Qué se recomienda firmar siempre al prestar dinero, si es posible?",
-                options: ["Un contrato o acuerdo formal", "Una selfie de ambos", "Un recibo de supermercado"],
-                answer: 0
-            },
-            {
-                q: "El Swap de Commodities se basa en el precio de materias primas como el petróleo. ¿Verdadero o Falso?",
-                options: ["Verdadero", "Falso"],
-                answer: 0
-            },
-            {
-                q: "Si el historial crediticio de alguien está 'limpio', ¿cómo afecta el riesgo de prestarle dinero?",
-                options: ["Aumenta el riesgo", "Disminuye el riesgo", "No tiene relación"],
-                answer: 1
-            },
-            {
-                q: "¿Qué es la Categoría 5 en el BCRA (Irrecuperable)?",
-                options: ["Una categoría de alto riesgo", "Una categoría de muy bajo riesgo"],
-                answer: 0
-            },
-            {
-                q: "Un 'swap' es un acuerdo financiero para intercambiar flujos de dinero futuros. ¿Verdadero o Falso?",
-                options: ["Verdadero", "Falso"],
-                answer: 0
-            }
-        ];
-        
-        // --- 2. Variables y Constantes del Juego ---
-        const gameContainer = document.getElementById('game-container');
-        const bird = document.getElementById('bird');
-        const scoreDisplay = document.getElementById('score-display');
-        const startMessage = document.getElementById('start-message');
-        const gameOverDiv = document.getElementById('game-over');
-        const completedDisplay = document.getElementById('questions-completed');
-        
-        const GRAVITY = 0.5;
-        const JUMP_FORCE = -10;
-        const PIPE_SPEED = 3;
-        const PIPE_GAP = 150; 
-        const QUESTION_THRESHOLD = 2; // Tuberías a pasar antes de la pregunta
-        
-        // Constantes de Puntuación por Velocidad
-        const MAX_QUESTION_POINTS = 100;
-        const POINT_DEDUCTION_PER_SECOND = 10;
-        
-        let birdY = 300;
-        let birdVelocity = 0;
-        let gameLoopInterval;
-        let pipeGenerationInterval;
-        let isGameRunning = false;
-        let score = 0;
-        let pipesPassedSinceQuestion = 0;
-        let questionsAnswered = 0;
-        let pipes = [];
+  <script>
+    (() => {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const startBtn = document.getElementById('startBtn');
+      const scoreEl = document.getElementById('score');
+      const gameOverScreen = document.getElementById('gameOverScreen');
+      const finalScoreEl = document.getElementById('finalScore');
+      const restartBtn = document.getElementById('restartBtn');
 
-        // --- 3. Variables del Quiz ---
-        const modal = document.getElementById('quiz-modal');
-        const quizForm = document.getElementById('quiz-form');
-        const feedbackDiv = document.getElementById('feedback');
-        let questionStartTime = 0; // Para el puntaje por velocidad
-        let isQuestionActive = false;
+      // Ajuste para retina
+      function setupCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = 400 * dpr;
+        canvas.height = 600 * dpr;
+        canvas.style.width = '400px';
+        canvas.style.height = '600px';
+        ctx.scale(dpr, dpr);
+      }
+      setupCanvas();
 
-        // --- 4. Funciones del Juego ---
+      // Variables del juego
+      const bird = {
+        x: 80,
+        y: 300,
+        width: 34,
+        height: 24,
+        gravity: 0.6,
+        lift: -10,
+        velocity: 0,
+        maxVelocity: 12,
+        radius: 12,
+      };
 
-        function startGame() {
-            if (isGameRunning) return;
-            
-            isGameRunning = true;
-            gameOverDiv.style.display = 'none';
-            startMessage.style.display = 'none';
-            
-            // Reiniciar estado
-            birdY = 300;
-            birdVelocity = 0;
-            bird.style.top = `${birdY}px`;
+      const pipeWidth = 60;
+      const pipeGap = 150;
+      const pipeSpeed = 2;
+      const pipes = [];
 
-            // Reiniciar Tuberías (Soluciona el requisito 1)
-            pipes.forEach(pipe => {
-                pipe.top.remove();
-                pipe.bottom.remove();
-            });
-            pipes = [];
-            
-            // Iniciar loops
-            gameLoopInterval = setInterval(gameLoop, 20);
-            pipeGenerationInterval = setInterval(generatePipe, 2000);
-            document.addEventListener('click', flap);
-        }
+      let frameCount = 0;
+      let score = 0;
+      let gameRunning = false;
 
-        function flap() {
-            if (isGameRunning) {
-                birdVelocity = JUMP_FORCE;
-            }
-        }
+      // Función para reiniciar el juego
+      function resetGame() {
+        bird.y = 300;
+        bird.velocity = 0;
+        pipes.length = 0;
+        scoreEl.textContent = score;
+        frameCount = 0;
+        gameOverScreen.style.display = 'none';
+        gameOverScreen.setAttribute('aria-hidden', 'true');
+      }
 
-        function gameLoop() {
-            // 1. Movimiento del Pájaro (Gravedad)
-            birdVelocity += GRAVITY;
-            birdY += birdVelocity;
-            bird.style.top = `${birdY}px`;
+      // Crear un nuevo par de tuberías
+      function createPipe() {
+        const minPipeHeight = 50;
+        const maxPipeHeight = 300;
+        const pipeNorthHeight = Math.floor(Math.random() * (maxPipeHeight - minPipeHeight + 1)) + minPipeHeight;
+        const pipeSouthY = pipeNorthHeight + pipeGap;
 
-            // 2. Movimiento y Creación de Tuberías
-            movePipes();
+        pipes.push({
+          x: canvas.width / (window.devicePixelRatio || 1),
+          yNorth: pipeNorthHeight - 400,
+          ySouth: pipeSouthY,
+          width: pipeWidth,
+          passed: false,
+          radius: 20,
+        });
+      }
 
-            // 3. Chequeo de Colisiones (Ground/Ceiling/Pipes)
-            checkCollisions();
+      // Detectar colisiones con tubos redondeados
+      function checkCollision(pipe) {
+        // Bird circle
+        const bx = bird.x + bird.radius;
+        const by = bird.y + bird.radius;
+        const br = bird.radius;
 
-            // 4. Chequeo de Puntuación/Pregunta
-            checkScoreAndQuestion();
-        }
+        // Pipe rectangles with rounded edges
+        const px = pipe.x;
+        const pw = pipe.width;
+        const radius = pipe.radius;
 
-        function generatePipe() {
-            if (!isGameRunning) return;
-            
-            const gapHeight = PIPE_GAP;
-            const minPipeHeight = 50;
-            const maxPipeHeight = gameContainer.offsetHeight - gapHeight - minPipeHeight;
-            
-            // Altura aleatoria de la tubería superior
-            const topHeight = Math.floor(Math.random() * (maxPipeHeight - minPipeHeight) + minPipeHeight);
-            const bottomHeight = gameContainer.offsetHeight - topHeight - gapHeight;
+        // Tubería norte (parte visible)
+        const pyNorth = pipe.yNorth + 400;
 
-            // Elementos DOM
-            const pipeTop = document.createElement('div');
-            pipeTop.classList.add('pipe', 'pipe-top');
-            pipeTop.style.height = `${topHeight}px`;
-            pipeTop.style.left = `${gameContainer.offsetWidth}px`;
-            
-            const pipeBottom = document.createElement('div');
-            pipeBottom.classList.add('pipe', 'pipe-bottom');
-            pipeBottom.style.height = `${bottomHeight}px`;
-            pipeBottom.style.left = `${gameContainer.offsetWidth}px`;
+        // Tubería sur (parte visible)
+        const pySouth = pipe.ySouth;
 
-            gameContainer.appendChild(pipeTop);
-            gameContainer.appendChild(pipeBottom);
+        // Colisión con tubería norte (top pipe)
+        if (bx + br > px && bx - br < px + pw) {
+          if (by - br < pyNorth) {
+            const cx1 = px + radius;
+            const cy1 = pyNorth;
+            const cx2 = px + pw - radius;
+            const cy2 = pyNorth;
 
-            pipes.push({ 
-                top: pipeTop, 
-                bottom: pipeBottom, 
-                x: gameContainer.offsetWidth,
-                passed: false 
-            });
-        }
-
-        function movePipes() {
-            pipes.forEach(pipe => {
-                pipe.x -= PIPE_SPEED;
-                pipe.top.style.left = `${pipe.x}px`;
-                pipe.bottom.style.left = `${pipe.x}px`;
-            });
-
-            // Filtrar las tuberías que han salido de la pantalla
-            pipes = pipes.filter(pipe => pipe.x + 50 > 0);
-        }
-
-        function checkCollisions() {
-            // Colisión con el suelo o el techo
-            if (birdY > gameContainer.offsetHeight - 30 || birdY < 0) {
-                endGame();
-                return;
+            if (by - br < pyNorth - radius) {
+              return true;
             }
 
-            // Colisión con las tuberías
-            const birdRect = bird.getBoundingClientRect();
-            const containerRect = gameContainer.getBoundingClientRect();
-
-            pipes.forEach(pipe => {
-                const pipeRectTop = pipe.top.getBoundingClientRect();
-                const pipeRectBottom = pipe.bottom.getBoundingClientRect();
-
-                const birdX = birdRect.left - containerRect.left;
-                const pipeX = pipe.x;
-
-                if (birdX < pipeX + 50 && birdX + 30 > pipeX) {
-                    if (birdY < pipeRectTop.height || birdY + 30 > (gameContainer.offsetHeight - pipeRectBottom.height)) {
-                        endGame();
-                    }
-                }
-            });
+            const dist1 = Math.hypot(bx - cx1, by - cy1);
+            const dist2 = Math.hypot(bx - cx2, by - cy2);
+            if (dist1 < br + radius || dist2 < br + radius) {
+              return true;
+            }
+          }
         }
 
-        function checkScoreAndQuestion() {
-            pipes.forEach(pipe => {
-                if (!pipe.passed && pipe.x < 50) { 
-                    pipe.passed = true;
-                    score++;
-                    pipesPassedSinceQuestion++;
-                    scoreDisplay.textContent = `Puntos: ${score}`;
+        // Colisión con tubería sur (bottom pipe)
+        if (bx + br > px && bx - br < px + pw) {
+          if (by + br > pySouth) {
+            const cx1 = px + radius;
+            const cy1 = pySouth;
+            const cx2 = px + pw - radius;
+            const cy2 = pySouth;
 
-                    // Lógica de pregunta
-                    if (pipesPassedSinceQuestion >= QUESTION_THRESHOLD && questionsAnswered < questions.length && !isQuestionActive) {
-                        isQuestionActive = true;
-                        endGameLoop(); 
-                        showQuestion(questionsAnswered);
-                    }
-                }
-            });
-        }
-
-        function endGameLoop() {
-            clearInterval(gameLoopInterval);
-            clearInterval(pipeGenerationInterval);
-            isGameRunning = false;
-            document.removeEventListener('click', flap);
-        }
-
-        function endGame() {
-            endGameLoop();
-            
-            // Ocultar modal de pregunta si estaba abierto
-            modal.style.display = 'none';
-            isQuestionActive = false;
-            
-            gameOverDiv.style.display = 'block';
-            gameOverDiv.innerHTML = `¡Juego Terminado! Puntuación final: ${score}. <br> Click para reiniciar.`;
-            
-            // Reiniciar puntajes y preguntas respondidas para el próximo juego
-            score = 0;
-            questionsAnswered = 0;
-            pipesPassedSinceQuestion = 0;
-            scoreDisplay.textContent = `Puntos: ${score}`;
-            completedDisplay.textContent = `Preguntas contestadas: ${questionsAnswered} / ${questions.length}`;
-
-            // Las tuberías se eliminan en startGame(), manteniendo la pantalla limpia.
-        }
-        
-        // --- 5. Funciones del Quiz ---
-
-        function showQuestion(index) {
-            const qData = questions[index];
-            document.getElementById('q-number').textContent = index + 1;
-            document.getElementById('q-text').textContent = qData.q;
-            feedbackDiv.textContent = '';
-            quizForm.reset();
-
-            const optionsContainer = document.getElementById('q-options-container');
-            optionsContainer.innerHTML = ''; 
-
-            qData.options.forEach((option, i) => {
-                const div = document.createElement('div');
-                div.classList.add('quiz-option');
-                div.innerHTML = `
-                    <label>
-                        <input type="radio" name="answer" value="${i}" required>
-                        ${option}
-                    </label>
-                `;
-                optionsContainer.appendChild(div);
-            });
-
-            // Iniciar el temporizador para la puntuación por velocidad
-            questionStartTime = Date.now();
-            modal.style.display = 'block';
-        }
-
-        function checkAnswer(event) {
-            event.preventDefault();
-
-            const selectedOption = quizForm.querySelector('input[name="answer"]:checked');
-            if (!selectedOption) {
-                feedbackDiv.textContent = "¡Debes seleccionar una respuesta!";
-                feedbackDiv.classList.add('incorrect');
-                return;
+            if (by + br > pySouth + radius) {
+              return true;
             }
 
-            const selectedIndex = parseInt(selectedOption.value);
-            const qData = questions[questionsAnswered]; // Usamos questionsAnswered como índice de la pregunta actual
-
-            if (selectedIndex === qData.answer) {
-                
-                // --- Puntuación por Velocidad (Implementa requisito 3) ---
-                const timeElapsedSeconds = (Date.now() - questionStartTime) / 1000;
-                // Puntos base - (segundos transcurridos * deducción por segundo)
-                const awardedPoints = Math.max(0, MAX_QUESTION_POINTS - Math.floor(timeElapsedSeconds * POINT_DEDUCTION_PER_SECOND));
-                
-                // Añadir puntos al marcador
-                score += awardedPoints;
-                
-                questionsAnswered++;
-                pipesPassedSinceQuestion = 0; // Reinicia el contador de tuberías
-                completedDisplay.textContent = `Preguntas contestadas: ${questionsAnswered} / ${questions.length}`;
-                
-                feedbackDiv.textContent = `✅ ¡Correcto! Ganaste ${awardedPoints} puntos por velocidad.`;
-                feedbackDiv.classList.remove('incorrect');
-                feedbackDiv.classList.add('correct');
-
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                    isQuestionActive = false;
-                    
-                    if (questionsAnswered >= questions.length) {
-                        endGameLoop();
-                        gameOverDiv.style.display = 'block';
-                        gameOverDiv.innerHTML = `<h2>🎉 ¡Ganaste! 🎉</h2> Completaste todas las ${questions.length} preguntas. Puntuación final: ${score}. <br> Click para reiniciar.`;
-                        
-                        // Reiniciar todo, excepto la puntuación final, que se mostrará
-                        score = 0;
-                        questionsAnswered = 0;
-                        pipesPassedSinceQuestion = 0;
-                        scoreDisplay.textContent = `Puntos: ${score}`;
-                        completedDisplay.textContent = `Preguntas contestadas: ${questionsAnswered} / ${questions.length}`;
-                    } else {
-                        startGame(); // Vuelve a iniciar el juego
-                    }
-                }, 1500);
-
-            } else {
-                // Respuesta Incorrecta: Cero Puntos y Fin del Juego (Implementa requisito 2)
-                feedbackDiv.textContent = "❌ Incorrecto. 0 Puntos por la pregunta. ¡El juego ha terminado!";
-                feedbackDiv.classList.remove('correct');
-                feedbackDiv.classList.add('incorrect');
-                
-                setTimeout(() => {
-                    endGame(); // Llama a endGame para reiniciar todo
-                }, 2000);
+            const dist1 = Math.hypot(bx - cx1, by - cy1);
+            const dist2 = Math.hypot(bx - cx2, by - cy2);
+            if (dist1 < br + radius || dist2 < br + radius) {
+              return true;
             }
+          }
         }
-        
-        // --- 6. Event Listeners ---
-        gameContainer.addEventListener('click', startGame);
-        gameOverDiv.addEventListener('click', startGame);
-        quizForm.addEventListener('submit', checkAnswer);
 
-    </script>
+        return false;
+      }
 
+      // Dibujar el pájaro con forma circular y detalles
+      function drawBird() {
+        const x = bird.x + bird.radius;
+        const y = bird.y + bird.radius;
+        const r = bird.radius;
+
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.ellipse(x, y, r + 4, r + 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFEC8B';
+        ctx.beginPath();
+        ctx.ellipse(x, y, r, r - 1, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#E6C200';
+        ctx.beginPath();
+        ctx.ellipse(x + 3, y + 2, r / 2, r / 3, Math.PI / 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.ellipse(x + 6, y - 2, r / 4, r / 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FF8C00';
+        ctx.beginPath();
+        ctx.moveTo(x + r + 2, y);
+        ctx.lineTo(x + r + 10, y - 4);
+        ctx.lineTo(x + r + 10, y + 4);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Dibujar tubos con bordes redondeados y detalles
+      function drawPipes() {
+        pipes.forEach((pipe) => {
+          const x = pipe.x;
+          const w = pipe.width;
+          const radius = pipe.radius;
+
+          const topHeight = pipe.yNorth + 400;
+          drawPipeSegment(x, 0, w, topHeight, radius, true);
+
+          const bottomY = pipe.ySouth;
+          const bottomHeight = canvas.height / (window.devicePixelRatio || 1) - 80 - bottomY;
+          drawPipeSegment(x, bottomY, w, bottomHeight, radius, false);
+        });
+      }
+
+      // Función para dibujar un tubo con bordes redondeados y detalles
+      function drawPipeSegment(x, y, width, height, radius, isTop) {
+        ctx.fillStyle = '#2E8B57';
+        ctx.strokeStyle = '#1E5631';
+        ctx.lineWidth = 4;
+
+        ctx.beginPath();
+        if (isTop) {
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + height - radius);
+          ctx.quadraticCurveTo(x, y + height, x + radius, y + height);
+          ctx.lineTo(x + width - radius, y + height);
+          ctx.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
+          ctx.lineTo(x + width, y);
+          ctx.closePath();
+        } else {
+          ctx.moveTo(x, y + radius);
+          ctx.quadraticCurveTo(x, y, x + radius, y);
+          ctx.lineTo(x + width - radius, y);
+          ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+          ctx.lineTo(x + width, y + height);
+          ctx.lineTo(x, y + height);
+          ctx.closePath();
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.strokeStyle = '#3CB371';
+        ctx.lineWidth = 1.5;
+        const linesCount = 6;
+        const spacing = width / (linesCount + 1);
+        for (let i = 1; i <= linesCount; i++) {
+          const lineX = x + i * spacing;
+          ctx.beginPath();
+          ctx.moveTo(lineX, y + 10);
+          ctx.lineTo(lineX, y + height - 10);
+          ctx.stroke();
+        }
+
+        const grad = ctx.createLinearGradient(x, y, x + width, y);
+        grad.addColorStop(0, 'rgba(0,0,0,0.15)');
+        grad.addColorStop(0.5, 'rgba(255,255,255,0.15)');
+        grad.addColorStop(1, 'rgba(0,0,0,0.15)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        if (isTop) {
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + height - radius);
+          ctx.quadraticCurveTo(x, y + height, x + radius, y + height);
+          ctx.lineTo(x + width - radius, y + height);
+          ctx.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
+          ctx.lineTo(x + width, y);
+          ctx.closePath();
+        } else {
+          ctx.moveTo(x, y + radius);
+          ctx.quadraticCurveTo(x, y, x + radius, y);
+          ctx.lineTo(x + width - radius, y);
+          ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+          ctx.lineTo(x + width, y + height);
+          ctx.lineTo(x, y + height);
+          ctx.closePath();
+        }
+        ctx.fill();
+      }
+
+      // Dibujar el suelo con textura simple
+      function drawGround() {
+        const groundY = canvas.height / (window.devicePixelRatio || 1) - 80;
+        const groundHeight = 80;
+
+        ctx.fillStyle = '#DEB887';
+        ctx.fillRect(0, groundY, canvas.width / (window.devicePixelRatio || 1), groundHeight);
+
+        ctx.strokeStyle = '#C19A6B';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 8; i++) {
+          const y = groundY + i * 10 + 5;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width / (window.devicePixelRatio || 1), y);
+          ctx.stroke();
+        }
+      }
+
+      // Dibujar el cielo (gradiente)
+      function drawBackground() {
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height / (window.devicePixelRatio || 1));
+        gradient.addColorStop(0, '#70c5ce');
+        gradient.addColorStop(1, '#5dade2');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
+      }
+
+      // Actualizar la lógica del juego
+      function update() {
+        if (!gameRunning) return;
+
+        frameCount++;
+
+        bird.velocity += bird.gravity;
+        bird.velocity = Math.min(bird.velocity, bird.maxVelocity);
+        bird.y += bird.velocity;
+
+        // Permitir que el pájaro toque el suelo sin perder
+        const groundY = canvas.height / (window.devicePixelRatio || 1) - 80;
+        if (bird.y + bird.height > groundY) {
+          bird.y = groundY - bird.height;
+          bird.velocity = 0;
+        }
+
+        if (bird.y < 0) {
+          bird.y = 0;
+          bird.velocity = 0;
+        }
+
+        if (frameCount % 100 === 0) {
+          createPipe();
+        }
+
+        pipes.forEach((pipe, index) => {
+          pipe.x -= pipeSpeed;
+
+          if (!pipe.passed && pipe.x + pipe.width < bird.x) {
+            pipe.passed = true;
+            score++;
+            scoreEl.textContent = score;
+          }
+
+          if (pipe.x + pipe.width < 0) {
+            pipes.splice(index, 1);
+          }
+
+          if (checkCollision(pipe)) {
+            endGame();
+          }
+        });
+      }
+
+      // Dibujar todo
+      function draw() {
+        drawBackground();
+        drawPipes();
+        drawGround();
+        drawBird();
+      }
+
+      // Loop principal
+      function gameLoop() {
+        if (!gameRunning) return;
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+      }
+
+      // Función para iniciar el juego
+      function startGame() {
+        score = 0;
+        resetGame();
+        scoreEl.textContent = score;
+        gameRunning = true;
+        gameOverScreen.style.display = 'none';
+        gameOverScreen.setAttribute('aria-hidden', 'true');
+        startBtn.disabled = true;
+        startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        gameLoop();
+      }
+
+      // Función para terminar el juego
+      function endGame() {
+        gameRunning = false;
+        finalScoreEl.textContent = score;
+        gameOverScreen.style.display = 'block';
+        gameOverScreen.setAttribute('aria-hidden', 'false');
+        startBtn.disabled = false;
+        startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+
+      // Función para que el pájaro "vuele" al hacer click o tocar
+      function flap() {
+        if (!gameRunning) return;
+        bird.velocity = bird.lift;
+      }
+
+      // Eventos para controlar el juego
+      startBtn.addEventListener('click', () => {
+        startGame();
+      });
+
+      restartBtn.addEventListener('click', () => {
+        startGame();
+      });
+
+      canvas.addEventListener('mousedown', flap);
+      canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        flap();
+      }, { passive: false });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' || e.code === 'ArrowUp') {
+          e.preventDefault();
+          if (!gameRunning) {
+            startGame();
+          } else {
+            flap();
+          }
+        }
+      });
+
+      // Mensaje inicial en canvas
+      ctx.fillStyle = 'white';
+      ctx.font = '20px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Presiona "Iniciar Juego" o barra espaciadora para comenzar', canvas.width / 2 / (window.devicePixelRatio || 1), canvas.height / 2 / (window.devicePixelRatio || 1));
+    })();
+  </script>
 </body>
 </html>
