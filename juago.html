@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafío Financiero Interactivo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+            text-align: center;
+        }
+        h1 {
+            color: #007bff;
+        }
+        /* Estilos del Juego */
+        .game-area {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin: 30px auto;
+            max-width: 600px;
+        }
+        #score-display {
+            font-size: 3em;
+            color: #28a745;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        #jump-button {
+            background-color: #ffc107;
+            color: #333;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        #jump-button:hover {
+            background-color: #e0a800;
+        }
+        /* Estilos del Modal/Pregunta */
+        .modal {
+            display: none; /* Oculto por defecto */
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+        .quiz-option {
+            text-align: left;
+            margin: 10px 0;
+        }
+        .quiz-option label {
+            display: block;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .quiz-option label:hover {
+            background-color: #e9ecef;
+        }
+        #feedback {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .correct { color: green; }
+        .incorrect { color: red; }
+        #final-score {
+            margin-top: 20px;
+            font-size: 1.5em;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🚀 Desafío de Puntuación Financiera 💰</h1>
+    <p>¡Haz clic en el botón para ganar puntos! Cada 100 puntos, se desbloquea una pregunta financiera. Debes responder correctamente para seguir jugando.</p>
+
+    <div class="game-area">
+        <p>Puntaje Actual:</p>
+        <div id="score-display">0</div>
+        <button id="jump-button">¡Ganar Puntos!</button>
+        <div id="questions-completed">Preguntas completadas: 0 / 10</div>
+    </div>
+
+    <div id="quiz-modal" class="modal">
+        <div class="modal-content">
+            <h2>Pregunta Financiera N°<span id="q-number"></span></h2>
+            <p id="q-text">Cargando pregunta...</p>
+
+            <form id="quiz-form">
+                <div id="q-options-container">
+                    </div>
+                <button type="submit" id="submit-answer">Responder</button>
+            </form>
+            <div id="feedback"></div>
+        </div>
+    </div>
+
+    <div id="final-score"></div>
+
+    <script>
+        // --- 1. Definición de las Preguntas y Respuestas ---
+        const questions = [
+            {
+                q: "¿Qué herramienta oficial del BCRA usas para revisar la situación de deuda de una persona?",
+                options: ["CUIT Online", "Consulta de Deuda del BCRA", "Registro de la Propiedad"],
+                answer: 1 // Índice de la respuesta correcta (empezando en 0)
+            },
+            {
+                q: "¿Cuál de estos NO es un tipo de Swap financiero?",
+                options: ["Swap de Divisas", "Swap de Tasas de Interés", "Swap de Inmuebles"],
+                answer: 2
+            },
+            {
+                q: "Si la persona a la que quieres prestar dinero tiene 'Categoría 5: Irrecuperable' en el BCRA, ¿qué indica?",
+                options: ["Bajo riesgo", "Riesgo alto de no cobro", "Que es un excelente pagador"],
+                answer: 1
+            },
+            // Agrega 7 preguntas más para completar las 10
+            {
+                q: "¿Qué significa que el riesgo de un préstamo 'aumenta'?",
+                options: ["Es más probable que te devuelvan el dinero.", "Es menos probable que te devuelvan el dinero.", "La tasa de interés baja."],
+                answer: 1
+            },
+            {
+                q: "¿Para qué sirve el CUIT Online además de verificar el número de CUIT?",
+                options: ["Para ver su saldo bancario.", "Para consultar su actividad y estado fiscal.", "Para enviar un mail."],
+                answer: 1
+            },
+            {
+                q: "Un Swap de Divisas implica el intercambio de flujos de dinero en...",
+                options: ["La misma moneda", "Diferentes monedas", "Solo en pesos argentinos"],
+                answer: 1
+            },
+            {
+                q: "¿Qué se recomienda firmar siempre al prestar dinero, si es posible?",
+                options: ["Un contrato o acuerdo formal", "Una selfie de ambos", "Un recibo de supermercado"],
+                answer: 0
+            },
+            {
+                q: "El BCRA cataloga la situación crediticia de los deudores. ¿Verdadero o Falso?",
+                options: ["Verdadero", "Falso", "Solo lo hace la AFIP"],
+                answer: 0
+            },
+            {
+                q: "¿Qué tipo de Swap se basa en el precio de materias primas como el petróleo?",
+                options: ["Swap de Tasas", "Swap de Commodities", "Swap de Servicios"],
+                answer: 1
+            },
+            {
+                q: "Si el historial crediticio de alguien está 'limpio', ¿cómo afecta el riesgo de prestarle dinero?",
+                options: ["Aumenta el riesgo", "Disminuye el riesgo", "No tiene relación"],
+                answer: 1
+            },
+        ];
+
+        // --- 2. Variables del Juego ---
+        let currentScore = 0;
+        let questionsAnswered = 0;
+        const scoreThreshold = 100; // Puntos necesarios para lanzar una pregunta
+        const scoreDisplay = document.getElementById('score-display');
+        const jumpButton = document.getElementById('jump-button');
+        const modal = document.getElementById('quiz-modal');
+        const quizForm = document.getElementById('quiz-form');
+        const feedbackDiv = document.getElementById('feedback');
+        const completedDisplay = document.getElementById('questions-completed');
+        const finalScoreDiv = document.getElementById('final-score');
+        
+        let isQuestionActive = false;
+        let currentQuestionIndex = 0;
+
+        // --- 3. Función del Juego (Simulación de Salto/Acción) ---
+        function gainScore() {
+            if (isQuestionActive || questionsAnswered >= 10) return; // No se puede sumar puntos si hay pregunta o si terminó
+
+            // Simulación de ganancia de puntos (como si saltara el dinosaurio)
+            currentScore += 10; 
+            scoreDisplay.textContent = currentScore;
+
+            if (currentScore >= scoreThreshold && questionsAnswered < 10) {
+                isQuestionActive = true;
+                currentQuestionIndex = questionsAnswered;
+                showQuestion(currentQuestionIndex);
+                jumpButton.disabled = true; // Deshabilita el botón mientras la pregunta está activa
+            }
+        }
+
+        // --- 4. Funciones del Quiz ---
+        function showQuestion(index) {
+            const qData = questions[index];
+            document.getElementById('q-number').textContent = index + 1;
+            document.getElementById('q-text').textContent = qData.q;
+            feedbackDiv.textContent = '';
+
+            const optionsContainer = document.getElementById('q-options-container');
+            optionsContainer.innerHTML = ''; // Limpiar opciones anteriores
+
+            qData.options.forEach((option, i) => {
+                const div = document.createElement('div');
+                div.classList.add('quiz-option');
+                div.innerHTML = `
+                    <label>
+                        <input type="radio" name="answer" value="${i}" required>
+                        ${option}
+                    </label>
+                `;
+                optionsContainer.appendChild(div);
+            });
+
+            modal.style.display = 'block';
+        }
+
+        function checkAnswer(event) {
+            event.preventDefault();
+
+            const selectedOption = quizForm.querySelector('input[name="answer"]:checked');
+            if (!selectedOption) {
+                feedbackDiv.textContent = "¡Debes seleccionar una respuesta!";
+                feedbackDiv.classList.add('incorrect');
+                return;
+            }
+
+            const selectedIndex = parseInt(selectedOption.value);
+            const qData = questions[currentQuestionIndex];
+
+            if (selectedIndex === qData.answer) {
+                // Respuesta Correcta: Pasa al siguiente nivel
+                questionsAnswered++;
+                currentScore = 0; // Reinicia el contador de puntos para el siguiente nivel
+                scoreDisplay.textContent = currentScore;
+                
+                feedbackDiv.textContent = "¡Correcto! Desbloqueas el siguiente nivel de puntos.";
+                feedbackDiv.classList.remove('incorrect');
+                feedbackDiv.classList.add('correct');
+
+                // Permitir al usuario ver el feedback brevemente antes de cerrar el modal
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    isQuestionActive = false;
+                    jumpButton.disabled = false; // Vuelve a habilitar el botón
+                    updateGameStatus();
+                }, 1500);
+
+            } else {
+                // Respuesta Incorrecta: Penalización o fin del juego (lo mantendremos simple: debes reintentar)
+                feedbackDiv.textContent = "Incorrecto. Inténtalo de nuevo.";
+                feedbackDiv.classList.remove('correct');
+                feedbackDiv.classList.add('incorrect');
+            }
+        }
+
+        function updateGameStatus() {
+            completedDisplay.textContent = `Preguntas completadas: ${questionsAnswered} / 10`;
+
+            if (questionsAnswered >= 10) {
+                // Fin del Juego
+                jumpButton.disabled = true;
+                jumpButton.textContent = "¡Juego Terminado!";
+                finalScoreDiv.innerHTML = '<h2>🎉 ¡Felicitaciones! Has completado todas las preguntas financieras. 🎉</h2>';
+            }
+        }
+
+        // --- 5. Event Listeners ---
+        jumpButton.addEventListener('click', gainScore);
+        quizForm.addEventListener('submit', checkAnswer);
+        
+        // Cierra el modal si el usuario hace click fuera de él
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                // Si está en modo reintento, no se cierra al azar
+                if (feedbackDiv.textContent.includes("Incorrecto")) {
+                    return;
+                }
+                // Si está en el modo de primera vez, solo forzamos respuesta
+            }
+        }
+    </script>
+
+</body>
+</html>
