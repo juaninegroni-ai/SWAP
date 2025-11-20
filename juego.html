@@ -209,7 +209,7 @@
             }
         ];
         
-        // --- 2. Variables del Juego ---
+        // --- 2. Variables y Constantes del Juego ---
         const gameContainer = document.getElementById('game-container');
         const bird = document.getElementById('bird');
         const scoreDisplay = document.getElementById('score-display');
@@ -220,8 +220,12 @@
         const GRAVITY = 0.5;
         const JUMP_FORCE = -10;
         const PIPE_SPEED = 3;
-        const PIPE_GAP = 150; // Espacio vertical entre tuberías
+        const PIPE_GAP = 150; 
         const QUESTION_THRESHOLD = 2; // Tuberías a pasar antes de la pregunta
+        
+        // Constantes de Puntuación por Velocidad
+        const MAX_QUESTION_POINTS = 100;
+        const POINT_DEDUCTION_PER_SECOND = 10;
         
         let birdY = 300;
         let birdVelocity = 0;
@@ -237,7 +241,7 @@
         const modal = document.getElementById('quiz-modal');
         const quizForm = document.getElementById('quiz-form');
         const feedbackDiv = document.getElementById('feedback');
-        let currentQuestionIndex = 0;
+        let questionStartTime = 0; // Para el puntaje por velocidad
         let isQuestionActive = false;
 
         // --- 4. Funciones del Juego ---
@@ -249,16 +253,16 @@
             gameOverDiv.style.display = 'none';
             startMessage.style.display = 'none';
             
-            // Reiniciar variables
+            // Reiniciar estado
             birdY = 300;
             birdVelocity = 0;
-            score = 0;
-            pipesPassedSinceQuestion = 0;
             bird.style.top = `${birdY}px`;
-            scoreDisplay.textContent = `Puntos: ${score}`;
 
-            // Eliminar tuberías existentes
-            pipes.forEach(pipe => pipe.top.remove());
+            // Reiniciar Tuberías (Soluciona el requisito 1)
+            pipes.forEach(pipe => {
+                pipe.top.remove();
+                pipe.bottom.remove();
+            });
             pipes = [];
             
             // Iniciar loops
@@ -327,15 +331,9 @@
                 pipe.x -= PIPE_SPEED;
                 pipe.top.style.left = `${pipe.x}px`;
                 pipe.bottom.style.left = `${pipe.x}px`;
-
-                // Eliminar tubería que salió de la pantalla
-                if (pipe.x + 50 < 0) {
-                    pipe.top.remove();
-                    pipe.bottom.remove();
-                }
             });
 
-            // Filtrar las tuberías que han salido
+            // Filtrar las tuberías que han salido de la pantalla
             pipes = pipes.filter(pipe => pipe.x + 50 > 0);
         }
 
@@ -354,12 +352,10 @@
                 const pipeRectTop = pipe.top.getBoundingClientRect();
                 const pipeRectBottom = pipe.bottom.getBoundingClientRect();
 
-                // Detección de colisión (simplificada)
                 const birdX = birdRect.left - containerRect.left;
                 const pipeX = pipe.x;
 
                 if (birdX < pipeX + 50 && birdX + 30 > pipeX) {
-                    // Colisión vertical con la tubería superior o inferior
                     if (birdY < pipeRectTop.height || birdY + 30 > (gameContainer.offsetHeight - pipeRectBottom.height)) {
                         endGame();
                     }
@@ -369,7 +365,7 @@
 
         function checkScoreAndQuestion() {
             pipes.forEach(pipe => {
-                if (!pipe.passed && pipe.x < 50) { // El pájaro pasó el eje X de la tubería
+                if (!pipe.passed && pipe.x < 50) { 
                     pipe.passed = true;
                     score++;
                     pipesPassedSinceQuestion++;
@@ -378,7 +374,7 @@
                     // Lógica de pregunta
                     if (pipesPassedSinceQuestion >= QUESTION_THRESHOLD && questionsAnswered < questions.length && !isQuestionActive) {
                         isQuestionActive = true;
-                        endGameLoop(); // Detener el juego para la pregunta
+                        endGameLoop(); 
                         showQuestion(questionsAnswered);
                     }
                 }
@@ -394,8 +390,22 @@
 
         function endGame() {
             endGameLoop();
+            
+            // Ocultar modal de pregunta si estaba abierto
+            modal.style.display = 'none';
+            isQuestionActive = false;
+            
             gameOverDiv.style.display = 'block';
             gameOverDiv.innerHTML = `¡Juego Terminado! Puntuación final: ${score}. <br> Click para reiniciar.`;
+            
+            // Reiniciar puntajes y preguntas respondidas para el próximo juego
+            score = 0;
+            questionsAnswered = 0;
+            pipesPassedSinceQuestion = 0;
+            scoreDisplay.textContent = `Puntos: ${score}`;
+            completedDisplay.textContent = `Preguntas contestadas: ${questionsAnswered} / ${questions.length}`;
+
+            // Las tuberías se eliminan en startGame(), manteniendo la pantalla limpia.
         }
         
         // --- 5. Funciones del Quiz ---
@@ -422,6 +432,8 @@
                 optionsContainer.appendChild(div);
             });
 
+            // Iniciar el temporizador para la puntuación por velocidad
+            questionStartTime = Date.now();
             modal.style.display = 'block';
         }
 
@@ -436,42 +448,54 @@
             }
 
             const selectedIndex = parseInt(selectedOption.value);
-            const qData = questions[currentQuestionIndex];
+            const qData = questions[questionsAnswered]; // Usamos questionsAnswered como índice de la pregunta actual
 
             if (selectedIndex === qData.answer) {
-                // Respuesta Correcta: Continúa el juego
+                
+                // --- Puntuación por Velocidad (Implementa requisito 3) ---
+                const timeElapsedSeconds = (Date.now() - questionStartTime) / 1000;
+                // Puntos base - (segundos transcurridos * deducción por segundo)
+                const awardedPoints = Math.max(0, MAX_QUESTION_POINTS - Math.floor(timeElapsedSeconds * POINT_DEDUCTION_PER_SECOND));
+                
+                // Añadir puntos al marcador
+                score += awardedPoints;
+                
                 questionsAnswered++;
                 pipesPassedSinceQuestion = 0; // Reinicia el contador de tuberías
                 completedDisplay.textContent = `Preguntas contestadas: ${questionsAnswered} / ${questions.length}`;
                 
-                feedbackDiv.textContent = "¡Correcto! Continúa volando.";
+                feedbackDiv.textContent = `✅ ¡Correcto! Ganaste ${awardedPoints} puntos por velocidad.`;
                 feedbackDiv.classList.remove('incorrect');
                 feedbackDiv.classList.add('correct');
 
-                // Permitir al usuario ver el feedback brevemente antes de cerrar el modal
                 setTimeout(() => {
                     modal.style.display = 'none';
                     isQuestionActive = false;
                     
                     if (questionsAnswered >= questions.length) {
-                        // Fin de todas las preguntas
                         endGameLoop();
                         gameOverDiv.style.display = 'block';
                         gameOverDiv.innerHTML = `<h2>🎉 ¡Ganaste! 🎉</h2> Completaste todas las ${questions.length} preguntas. Puntuación final: ${score}. <br> Click para reiniciar.`;
+                        
+                        // Reiniciar todo, excepto la puntuación final, que se mostrará
+                        score = 0;
+                        questionsAnswered = 0;
+                        pipesPassedSinceQuestion = 0;
+                        scoreDisplay.textContent = `Puntos: ${score}`;
+                        completedDisplay.textContent = `Preguntas contestadas: ${questionsAnswered} / ${questions.length}`;
                     } else {
-                        startGame(); // Vuelve a iniciar el juego (re-activa los loops)
+                        startGame(); // Vuelve a iniciar el juego
                     }
                 }, 1500);
 
             } else {
-                // Respuesta Incorrecta: Penalización (Fin del juego)
-                feedbackDiv.textContent = "Incorrecto. ¡El juego ha terminado! Tu pájaro cae por la penalización.";
+                // Respuesta Incorrecta: Cero Puntos y Fin del Juego (Implementa requisito 2)
+                feedbackDiv.textContent = "❌ Incorrecto. 0 Puntos por la pregunta. ¡El juego ha terminado!";
                 feedbackDiv.classList.remove('correct');
                 feedbackDiv.classList.add('incorrect');
                 
                 setTimeout(() => {
-                    modal.style.display = 'none';
-                    endGame();
+                    endGame(); // Llama a endGame para reiniciar todo
                 }, 2000);
             }
         }
