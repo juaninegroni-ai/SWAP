@@ -116,6 +116,20 @@
         color: #f87171;
         margin-bottom: 1rem;
     }
+
+    #countdownDisplay {
+      display: none; 
+      background: rgba(0, 123, 255, 0.85); 
+      color: white; 
+      font-size: 4rem; 
+      width: 150px; 
+      height: 150px; 
+      border-radius: 50%; 
+      padding: 0;
+      line-height: 150px; /* Centrado vertical */
+      text-align: center;
+      box-shadow: 0 0 30px #007bff;
+    }
   </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-b from-sky-400 to-blue-600 relative">
@@ -144,8 +158,8 @@
         </form>
     </div>
 
-    <div id="countdownDisplay" class="game-overlay" style="display: none; background: rgba(0, 123, 255, 0.85); color: white; font-size: 4rem; width: 150px; height: 150px; border-radius: 50%; padding: 0;">
-        <span class="flex items-center justify-center h-full" id="countdownNumber">3</span>
+    <div id="countdownDisplay" class="game-overlay">
+        <span id="countdownNumber">3</span>
     </div>
 
   </div>
@@ -170,67 +184,28 @@
     (() => {
       // --- 1. Definición de Preguntas y Constantes ---
       const questions = [
-          {
-              q: "¿Qué herramienta oficial del BCRA te permite revisar la situación de deuda de un tercero?",
-              options: ["CUIT Online", "Consulta de Deuda del BCRA", "Registro de la Propiedad"],
-              answer: 1 
-          },
-          {
-              q: "¿Cuál de estos NO es un tipo de Swap financiero mencionado en la información clave?",
-              options: ["Swap de Divisas", "Swap de Tasas de Interés", "Swap de Inmuebles"],
-              answer: 2
-          },
-          {
-              q: "Si el historial crediticio de alguien está 'limpio', ¿cómo afecta el riesgo de prestarle dinero?",
-              options: ["Aumenta el riesgo", "Disminuye el riesgo", "No tiene relación"],
-              answer: 1
-          },
-          {
-              q: "¿Cuál es el puntaje máximo por pregunta que puedes obtener por velocidad?",
-              options: ["50 puntos", "100 puntos", "200 puntos"],
-              answer: 1
-          },
-          {
-              q: "¿Qué significa que el riesgo de un préstamo 'aumenta'?",
-              options: ["Es más probable que te devuelvan el dinero.", "Es menos probable que te devuelvan el dinero.", "La tasa de interés baja."],
-              answer: 1
-          },
-          {
-              q: "¿Para qué sirve el CUIT Online además de verificar el número de CUIT?",
-              options: ["Para ver su saldo bancario.", "Para consultar su actividad y estado fiscal.", "Para enviar un mail."],
-              answer: 1
-          },
-          {
-              q: "Un Swap de Commodities se basa en el precio de materias primas como...",
-              options: ["Acciones de tecnología", "Petróleo o maíz", "Bonos del tesoro"],
-              answer: 1
-          },
-          {
-              q: "¿Qué se recomienda firmar siempre al prestar dinero, si es posible?",
-              options: ["Un contrato o acuerdo formal", "Una selfie de ambos", "Un recibo de supermercado"],
-              answer: 0
-          },
-          {
-              q: "Si la respuesta es incorrecta en el quiz, ¿cuántos puntos se suman y qué pasa con el juego?",
-              options: ["Se suman 50 puntos y continúa.", "Se suman 0 puntos y termina el juego.", "Se puede reintentar la pregunta."],
-              answer: 1
-          },
-          {
-              q: "El BCRA cataloga la situación crediticia de los deudores. ¿Verdadero o Falso?",
-              options: ["Verdadero", "Falso"],
-              answer: 0
-          },
+          { q: "¿Qué herramienta oficial del BCRA te permite revisar la situación de deuda de un tercero?", options: ["CUIT Online", "Consulta de Deuda del BCRA", "Registro de la Propiedad"], answer: 1 },
+          { q: "¿Cuál de estos NO es un tipo de Swap financiero mencionado en la información clave?", options: ["Swap de Divisas", "Swap de Tasas de Interés", "Swap de Inmuebles"], answer: 2 },
+          { q: "Si el historial crediticio de alguien está 'limpio', ¿cómo afecta el riesgo de prestarle dinero?", options: ["Aumenta el riesgo", "Disminuye el riesgo", "No tiene relación"], answer: 1 },
+          { q: "¿Cuál es el puntaje máximo por pregunta que puedes obtener por velocidad?", options: ["50 puntos", "100 puntos", "200 puntos"], answer: 1 },
+          { q: "¿Qué significa que el riesgo de un préstamo 'aumenta'?", options: ["Es más probable que te devuelvan el dinero.", "Es menos probable que te devuelvan el dinero.", "La tasa de interés baja."], answer: 1 },
+          { q: "¿Para qué sirve el CUIT Online además de verificar el número de CUIT?", options: ["Para ver su saldo bancario.", "Para consultar su actividad y estado fiscal.", "Para enviar un mail."], answer: 1 },
+          { q: "Un Swap de Commodities se basa en el precio de materias primas como...", options: ["Acciones de tecnología", "Petróleo o maíz", "Bonos del tesoro"], answer: 1 },
+          { q: "¿Qué se recomienda firmar siempre al prestar dinero, si es posible?", options: ["Un contrato o acuerdo formal", "Una selfie de ambos", "Un recibo de supermercado"], answer: 0 },
+          { q: "Si la respuesta es incorrecta en el quiz, ¿cuántos puntos se suman y qué pasa con el juego?", options: ["Se suman 50 puntos y continúa.", "Se suman 0 puntos y termina el juego.", "Se puede reintentar la pregunta."], answer: 1 },
+          { q: "El BCRA cataloga la situación crediticia de los deudores. ¿Verdadero o Falso?", options: ["Verdadero", "Falso"], answer: 0 },
       ];
 
-      const QUESTION_THRESHOLD = 2; // Tuberías a pasar antes de la pregunta
+      const QUESTION_THRESHOLD = 2; 
       const MAX_QUESTION_POINTS = 100;
-      const POINT_DEDUCTION_PER_SECOND = 6.67; // 100 puntos / 15 segundos = 6.67 puntos/segundo
-      const TIME_LIMIT_SECONDS = 15; // Límite de 15 segundos
+      const POINT_DEDUCTION_PER_SECOND = 6.67; 
+      const TIME_LIMIT_SECONDS = 15; 
       
-      // Ajustes de velocidad AUMENTADOS
-      const BIRD_LIFT = -11; // Salto más fuerte
-      const PIPE_SPEED = 3;  // Movimiento de tuberías más rápido
-      
+      const INITIAL_LIFT = -10;
+      const INITIAL_PIPE_SPEED = 2;
+      const DIFFICULTY_INCREMENT_LIFT = -0.3; // Aumento gradual de dificultad en el salto
+      const DIFFICULTY_INCREMENT_SPEED = 0.2; // Aumento gradual de dificultad en la velocidad
+
       // --- 2. Variables y Elementos DOM ---
       const canvas = document.getElementById('gameCanvas');
       const ctx = canvas.getContext('2d');
@@ -259,7 +234,7 @@
         width: 34,
         height: 24,
         gravity: 0.6,
-        lift: BIRD_LIFT, // Aplicar nueva velocidad
+        lift: INITIAL_LIFT, // Velocidad inicial de salto
         velocity: 0,
         maxVelocity: 12,
         radius: 12,
@@ -267,19 +242,21 @@
 
       const pipeWidth = 60;
       const pipeGap = 150;
+      let currentPipeSpeed = INITIAL_PIPE_SPEED; // Velocidad de tuberías actual
       const pipes = [];
 
+      let availableQuestions = [...questions]; // Copia de preguntas para selección aleatoria
       let frameCount = 0;
       let score = 0;
       let pipesPassedSinceQuestion = 0;
       let questionsAnswered = 0;
       let questionStartTime = 0; 
-      let quizTimerInterval; // Intervalo para el cronómetro del quiz
+      let quizTimerInterval; 
       let isQuestionActive = false;
       let gameRunning = false;
-      let countdownInterval; // Intervalo para el conteo de 3 segundos
+      let countdownInterval; 
 
-      // --- Funciones de Dibujo y Creación (Mantenidas del original) ---
+      // --- Funciones de Dibujo y Creación (omito el cuerpo para brevedad, son idénticas a la versión anterior) ---
       function setupCanvas() {
         const dpr = window.devicePixelRatio || 1;
         canvas.width = 400 * dpr;
@@ -290,28 +267,33 @@
       }
       setupCanvas();
 
+      // Las funciones drawPipeSegment, drawBird, drawPipes, drawGround, drawBackground, createPipe, checkCollision son idénticas al código anterior. 
+      // Si necesitas el código completo para ejecutarlo, asegúrate de copiarlas de la respuesta anterior.
+      // -----------------------------------------------------------------------------------------------------------------------------------
+      // -----------------------------------------------------------------------------------------------------------------------------------
+      // Funciones de dibujo y colisión (Cuerpo omitido por ser muy largo y no cambiado, usar las del código anterior si se necesita ejecutar)
       function drawPipeSegment(x, y, width, height, radius, isTop) {
         ctx.fillStyle = '#2E8B57';
         ctx.strokeStyle = '#1E5631';
         ctx.lineWidth = 4;
-
         ctx.beginPath();
+        // [Cuerpo de la función drawPipeSegment]
         if (isTop) {
-          ctx.moveTo(x, y);
-          ctx.lineTo(x, y + height - radius);
-          ctx.quadraticCurveTo(x, y + height, x + radius, y + height);
-          ctx.lineTo(x + width - radius, y + height);
-          ctx.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
-          ctx.lineTo(x + width, y);
-          ctx.closePath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y + height - radius);
+            ctx.quadraticCurveTo(x, y + height, x + radius, y + height);
+            ctx.lineTo(x + width - radius, y + height);
+            ctx.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
+            ctx.lineTo(x + width, y);
+            ctx.closePath();
         } else {
-          ctx.moveTo(x, y + radius);
-          ctx.quadraticCurveTo(x, y, x + radius, y);
-          ctx.lineTo(x + width - radius, y);
-          ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-          ctx.lineTo(x + width, y + height);
-          ctx.lineTo(x, y + height);
-          ctx.closePath();
+            ctx.moveTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height);
+            ctx.lineTo(x, y + height);
+            ctx.closePath();
         }
         ctx.fill();
         ctx.stroke();
@@ -321,11 +303,11 @@
         const linesCount = 6;
         const spacing = width / (linesCount + 1);
         for (let i = 1; i <= linesCount; i++) {
-          const lineX = x + i * spacing;
-          ctx.beginPath();
-          ctx.moveTo(lineX, y + 10);
-          ctx.lineTo(lineX, y + height - 10);
-          ctx.stroke();
+            const lineX = x + i * spacing;
+            ctx.beginPath();
+            ctx.moveTo(lineX, y + 10);
+            ctx.lineTo(lineX, y + height - 10);
+            ctx.stroke();
         }
 
         const grad = ctx.createLinearGradient(x, y, x + width, y);
@@ -335,26 +317,25 @@
         ctx.fillStyle = grad;
         ctx.beginPath();
         if (isTop) {
-          ctx.moveTo(x, y);
-          ctx.lineTo(x, y + height - radius);
-          ctx.quadraticCurveTo(x, y + height, x + radius, y + height);
-          ctx.lineTo(x + width - radius, y + height);
-          ctx.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
-          ctx.lineTo(x + width, y);
-          ctx.closePath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y + height - radius);
+            ctx.quadraticCurveTo(x, y + height, x + radius, y + height);
+            ctx.lineTo(x + width - radius, y + height);
+            ctx.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
+            ctx.lineTo(x + width, y);
+            ctx.closePath();
         } else {
-          ctx.moveTo(x, y + radius);
-          ctx.quadraticCurveTo(x, y, x + radius, y);
-          ctx.lineTo(x + width - radius, y);
-          ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-          ctx.lineTo(x + width, y + height);
-          ctx.lineTo(x, y + height);
-          ctx.closePath();
+            ctx.moveTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height);
+            ctx.lineTo(x, y + height);
+            ctx.closePath();
         }
         ctx.fill();
       }
-
-      function drawBird() {
+      function drawBird() { /* [Cuerpo de la función drawBird] */
         const x = bird.x + bird.radius;
         const y = bird.y + bird.radius;
         const r = bird.radius;
@@ -387,8 +368,7 @@
         ctx.closePath();
         ctx.fill();
       }
-
-      function drawPipes() {
+      function drawPipes() { /* [Cuerpo de la función drawPipes] */
         pipes.forEach((pipe) => {
           const x = pipe.x;
           const w = pipe.width;
@@ -402,8 +382,7 @@
           drawPipeSegment(x, bottomY, w, bottomHeight, radius, false);
         });
       }
-      
-      function drawGround() {
+      function drawGround() { /* [Cuerpo de la función drawGround] */
         const groundY = canvas.height / (window.devicePixelRatio || 1) - 80;
         const groundHeight = 80;
 
@@ -420,16 +399,14 @@
           ctx.stroke();
         }
       }
-
-      function drawBackground() {
+      function drawBackground() { /* [Cuerpo de la función drawBackground] */
         const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height / (window.devicePixelRatio || 1));
         gradient.addColorStop(0, '#70c5ce');
         gradient.addColorStop(1, '#5dade2');
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
       }
-
-      function createPipe() {
+      function createPipe() { /* [Cuerpo de la función createPipe] */
         const minPipeHeight = 50;
         const maxPipeHeight = 300;
         const pipeNorthHeight = Math.floor(Math.random() * (maxPipeHeight - minPipeHeight + 1)) + minPipeHeight;
@@ -444,8 +421,7 @@
           radius: 20,
         });
       }
-
-      function checkCollision(pipe) {
+      function checkCollision(pipe) { /* [Cuerpo de la función checkCollision] */
         const bx = bird.x + bird.radius;
         const by = bird.y + bird.radius;
         const br = bird.radius;
@@ -462,15 +438,10 @@
             const cx2 = px + pw - radius;
             const cy2 = pyNorth;
 
-            if (by - br < pyNorth - radius) {
-              return true;
-            }
-
+            if (by - br < pyNorth - radius) return true;
             const dist1 = Math.hypot(bx - cx1, by - cy1);
             const dist2 = Math.hypot(bx - cx2, by - cy2);
-            if (dist1 < br + radius || dist2 < br + radius) {
-              return true;
-            }
+            if (dist1 < br + radius || dist2 < br + radius) return true;
           }
         }
 
@@ -481,31 +452,31 @@
             const cx2 = px + pw - radius;
             const cy2 = pySouth;
 
-            if (by + br > pySouth + radius) {
-              return true;
-            }
-
+            if (by + br > pySouth + radius) return true;
             const dist1 = Math.hypot(bx - cx1, by - cy1);
             const dist2 = Math.hypot(bx - cx2, by - cy2);
-            if (dist1 < br + radius || dist2 < br + radius) {
-              return true;
-            }
+            if (dist1 < br + radius || dist2 < br + radius) return true;
           }
         }
 
         return false;
       }
-      // --- Fin de Funciones de Dibujo ---
+      // -----------------------------------------------------------------------------------------------------------------------------------
+      // -----------------------------------------------------------------------------------------------------------------------------------
 
-      // Función para reiniciar el juego
+
       function resetGame() {
         bird.y = 300;
         bird.velocity = 0;
         pipes.length = 0;
         frameCount = 0;
-        
         pipesPassedSinceQuestion = 0;
         
+        // Reiniciar velocidad a valores iniciales
+        currentPipeSpeed = INITIAL_PIPE_SPEED;
+        bird.lift = INITIAL_LIFT;
+        availableQuestions = [...questions]; // Recargar el pool de preguntas
+
         gameOverScreen.style.display = 'none';
         gameOverScreen.setAttribute('aria-hidden', 'true');
         quizModal.style.display = 'none';
@@ -541,9 +512,8 @@
         }
 
         pipes.forEach((pipe, index) => {
-          pipe.x -= PIPE_SPEED; // Uso de la velocidad aumentada
+          pipe.x -= currentPipeSpeed; // Uso de la velocidad actual
 
-          // Detección de paso de tubería
           if (!pipe.passed && pipe.x + pipe.width < bird.x) {
             pipe.passed = true;
             score++;
@@ -551,9 +521,9 @@
             scoreEl.textContent = score;
 
             // Lógica para lanzar la pregunta cada QUESTION_THRESHOLD
-            if (pipesPassedSinceQuestion >= QUESTION_THRESHOLD && questionsAnswered < questions.length && !isQuestionActive) {
+            if (pipesPassedSinceQuestion >= QUESTION_THRESHOLD && availableQuestions.length > 0 && !isQuestionActive) {
                 isQuestionActive = true;
-                showQuestion(questionsAnswered);
+                showQuestion(); // Llamar sin índice, la pregunta es aleatoria
                 return; 
             }
           }
@@ -582,20 +552,30 @@
         requestAnimationFrame(gameLoop);
       }
       
+      // Función para incrementar dificultad
+      function increaseDifficulty() {
+          currentPipeSpeed += DIFFICULTY_INCREMENT_SPEED;
+          bird.lift += DIFFICULTY_INCREMENT_LIFT; // lift es negativo, por lo que -= le daría menos salto (más difícil). Usamos +=
+      }
+
       function continueGame(pointsWon) {
-          questionsAnswered++;
+          // Si ganó puntos, significa que respondió correctamente, por lo tanto aumentamos la dificultad
+          if (pointsWon > 0) {
+              increaseDifficulty();
+          }
+          
           pipesPassedSinceQuestion = 0; 
           quizModal.style.display = 'none';
           quizModal.setAttribute('aria-hidden', 'true');
           
-          if (questionsAnswered >= questions.length) {
-              endGame("win", `¡Completaste las ${questions.length} preguntas! Puntos ganados en esta ronda: ${pointsWon}`);
+          if (availableQuestions.length === 0) {
+              endGame("win", `¡Completaste las ${questions.length} preguntas! ¡Eres un experto!`);
           } else {
-              startCountdown(pointsWon); // Iniciar conteo de 3 segundos
+              startCountdown(); // Iniciar conteo de 3 segundos
           }
       }
 
-      function startCountdown(points) {
+      function startCountdown() {
           let count = 3;
           countdownNumber.textContent = count;
           countdownDisplay.style.display = 'flex';
@@ -648,21 +628,6 @@
       }
 
       // --- 4. Lógica del Quiz ---
-      
-      function startQuizTimer() {
-          let time = TIME_LIMIT_SECONDS;
-          quizTimer.textContent = `Tiempo restante: ${time}s`;
-          
-          quizTimerInterval = setInterval(() => {
-              time--;
-              quizTimer.textContent = `Tiempo restante: ${time}s`;
-              
-              if (time <= 0) {
-                  clearInterval(quizTimerInterval);
-                  handleQuizTimeout();
-              }
-          }, 1000);
-      }
 
       function handleQuizTimeout() {
           // Tratar el tiempo agotado como respuesta incorrecta
@@ -670,17 +635,21 @@
           quizFeedback.classList.remove('correct-feedback');
           quizFeedback.classList.add('incorrect-feedback');
           
-          // Se mantiene la lógica de continuar el juego sin sumar puntos
           setTimeout(() => {
               continueGame(0);
           }, 1500);
       }
 
 
-      function showQuestion(index) {
-          const qData = questions[index];
+      function showQuestion() {
+          // Seleccionar una pregunta aleatoria de las disponibles
+          const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+          const qData = availableQuestions[randomIndex];
+
+          // Guardar el índice original de la pregunta para poder removerla
+          qData.originalIndex = randomIndex;
           
-          qNumber.textContent = index + 1;
+          qNumber.textContent = questionsAnswered + 1;
           qText.textContent = qData.q;
           quizFeedback.textContent = '';
           qOptionsContainer.innerHTML = '';
@@ -701,52 +670,71 @@
           questionStartTime = Date.now();
           quizModal.style.display = 'block';
           quizModal.setAttribute('aria-hidden', 'false');
-          startQuizTimer(); // Iniciar el cronómetro de 15 segundos
+          startQuizTimer(); 
       }
+
+      function startQuizTimer() {
+          let time = TIME_LIMIT_SECONDS;
+          quizTimer.textContent = `Tiempo restante: ${time}s`;
+          
+          quizTimerInterval = setInterval(() => {
+              time--;
+              quizTimer.textContent = `Tiempo restante: ${time}s`;
+              
+              if (time <= 0) {
+                  clearInterval(quizTimerInterval);
+                  handleQuizTimeout();
+              }
+          }, 1000);
+      }
+
 
       function checkAnswer(event) {
           event.preventDefault();
 
-          if (quizTimerInterval) clearInterval(quizTimerInterval); // Detener el cronómetro
+          if (quizTimerInterval) clearInterval(quizTimerInterval);
 
           const selectedOption = quizForm.querySelector('input[name="answer"]:checked');
           if (!selectedOption) {
-              // Si el usuario presiona responder sin seleccionar, no hacemos nada y el timer sigue
               quizFeedback.textContent = "¡Debes seleccionar una respuesta!";
               quizFeedback.classList.add('incorrect-feedback');
-              startQuizTimer(); // Reactivar el cronómetro
+              startQuizTimer();
               return;
           }
 
           const selectedIndex = parseInt(selectedOption.value);
-          const qData = questions[questionsAnswered];
+          // Obtener la pregunta actual (la última que se mostró)
+          const currentQuestion = availableQuestions.find(q => q.q === qText.textContent); 
+
           let pointsWon = 0;
           
-          // --- Respuesta Correcta ---
-          if (selectedIndex === qData.answer) {
+          if (selectedIndex === currentQuestion.answer) {
               const timeElapsedSeconds = (Date.now() - questionStartTime) / 1000;
-              // Puntos base - (segundos transcurridos * deducción por segundo)
               pointsWon = Math.max(0, MAX_QUESTION_POINTS - Math.floor(timeElapsedSeconds * POINT_DEDUCTION_PER_SECOND));
               
               score += pointsWon;
+              questionsAnswered++;
               scoreEl.textContent = score;
+              questionsAnsweredDisplay.textContent = questionsAnswered;
 
+              // Eliminar la pregunta respondida correctamente del pool de disponibles
+              availableQuestions.splice(currentQuestion.originalIndex, 1);
+              
               quizFeedback.textContent = `✅ ¡Correcto! Ganaste ${pointsWon} puntos.`;
               quizFeedback.classList.remove('incorrect-feedback');
               quizFeedback.classList.add('correct-feedback');
 
-              // Continuar el juego después de un breve tiempo
               setTimeout(() => {
                   continueGame(pointsWon);
               }, 1500);
           } 
-          // --- Respuesta Incorrecta (0 puntos y continúa) ---
           else {
               quizFeedback.textContent = "❌ Incorrecto. 0 puntos por la pregunta. ¡El juego continúa!";
               quizFeedback.classList.remove('correct-feedback');
               quizFeedback.classList.add('incorrect-feedback');
               
-              // Continuar el juego después de un breve tiempo
+              // No se incrementa questionsAnswered ni se elimina la pregunta, para que pueda salir de nuevo.
+              // Solo se continúa el juego.
               setTimeout(() => {
                   continueGame(0);
               }, 1500);
