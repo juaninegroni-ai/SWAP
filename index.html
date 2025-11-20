@@ -45,6 +45,56 @@
         a {
             color: #007bff;
         }
+        /* Estilos para el Quiz */
+        .quiz-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        .quiz-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .options label {
+            display: block;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        .options input[type="radio"] {
+            margin-right: 10px;
+        }
+        #submit-quiz {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 20px auto 0 auto;
+        }
+        #submit-quiz:hover {
+            background-color: #218838;
+        }
+        #quiz-results {
+            margin-top: 20px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        .correct-answer {
+            color: green;
+        }
+        .wrong-answer {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -56,7 +106,6 @@
 
     <div class="container">
 
-        <!-- Links para evaluar si conviene prestar dinero -->
         <div class="section-text">
             <h2>📌 ¿Conviene Prestar Dinero a una Persona?</h2>
             <p>Antes de prestar dinero, es fundamental evaluar el riesgo. Hoy en día existen herramientas gratuitas que permiten verificar información clave sobre la situación fiscal y crediticia de cualquier persona en Argentina.</p>
@@ -78,7 +127,6 @@
             Prestá solo si estás dispuesto a asumir el riesgo y, si podés, firmá un acuerdo.</p>
         </div>
 
-        <!-- Swap Económico -->
         <div class="section-text">
             <h2>💱 ¿Qué es un Swap Económico?</h2>
             <p>
@@ -113,11 +161,114 @@
             </ul>
         </div>
 
+        <div class="quiz-container">
+            <h2>🎮 ¡Pon a prueba tus conocimientos financieros!</h2>
+            <form id="financial-quiz">
+                <div class="question">
+                    <p><strong>1. ¿Qué información te ayuda a verificar el CUIT Online?</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q1" value="a"> El historial de compras de una persona.</label>
+                        <label><input type="radio" name="q1" value="b"> Datos básicos como actividad y estado fiscal.</label>
+                        <label><input type="radio" name="q1" value="c"> Su número de cuenta bancaria.</label>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p><strong>2. ¿Dónde puedes consultar la situación crediticia oficial de una persona en Argentina?</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q2" value="a"> En la página de CUIT Online.</label>
+                        <label><input type="radio" name="q2" value="b"> En la consulta de deudas del BCRA.</label>
+                        <label><input type="radio" name="q2" value="c"> En redes sociales.</label>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p><strong>3. Si una persona tiene deudas importantes o atrasos según el BCRA, ¿qué indica esto para prestar dinero?</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q3" value="a"> El riesgo de no recuperación es bajo.</label>
+                        <label><input type="radio" name="q3" value="b"> El riesgo de no recuperación es alto.</label>
+                        <label><input type="radio" name="q3" value="c"> No afecta la probabilidad de cobro.</label>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p><strong>4. ¿Qué es un swap económico?</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q4" value="a"> Un tipo de préstamo bancario.</label>
+                        <label><input type="radio" name="q4" value="b"> Un acuerdo para intercambiar flujos de dinero futuros.</label>
+                        <label><input type="radio" name="q4" value="c"> Un método para invertir en la bolsa directamente.</label>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p><strong>5. ¿Cuál de los siguientes NO es un tipo de swap mencionado en el texto?</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q5" value="a"> Swap de Tasas de Interés.</label>
+                        <label><input type="radio" name="q5" value="b"> Swap de Propiedades.</label>
+                        <label><input type="radio" name="q5" value="c"> Swap de Divisas.</label>
+                    </div>
+                </div>
+
+                <button type="button" id="submit-quiz">Ver Resultados</button>
+            </form>
+            <div id="quiz-results"></div>
+        </div>
+
         <footer>
             <p style="text-align: center; margin-top: 40px; padding: 10px; border-top: 1px solid #ccc;">&copy; 2025 - Información Financiera</p>
         </footer>
 
     </div>
+
+    <script>
+        document.getElementById('submit-quiz').addEventListener('click', function() {
+            let score = 0;
+            const answers = {
+                q1: 'b',
+                q2: 'b',
+                q3: 'b',
+                q4: 'b',
+                q5: 'b'
+            };
+
+            const form = document.getElementById('financial-quiz');
+            const questions = form.querySelectorAll('.question');
+            let allAnswered = true;
+
+            questions.forEach((question, index) => {
+                const questionName = `q${index + 1}`;
+                const selectedOption = form.querySelector(`input[name="${questionName}"]:checked`);
+                const optionsDiv = question.querySelector('.options');
+
+                // Limpiar resultados anteriores
+                optionsDiv.querySelectorAll('label').forEach(label => {
+                    label.classList.remove('correct-answer', 'wrong-answer');
+                });
+
+                if (selectedOption) {
+                    if (selectedOption.value === answers[questionName]) {
+                        score++;
+                        selectedOption.parentElement.classList.add('correct-answer');
+                    } else {
+                        selectedOption.parentElement.classList.add('wrong-answer');
+                        // Mostrar la respuesta correcta
+                        form.querySelector(`input[name="${questionName}"][value="${answers[questionName]}"]`).parentElement.classList.add('correct-answer');
+                    }
+                } else {
+                    allAnswered = false;
+                }
+            });
+
+            const resultsDiv = document.getElementById('quiz-results');
+            if (allAnswered) {
+                resultsDiv.innerHTML = `Tu puntaje es: ${score} de ${Object.keys(answers).length}.`;
+                resultsDiv.style.color = score >= 3 ? 'green' : 'red';
+            } else {
+                resultsDiv.innerHTML = 'Por favor, responde todas las preguntas antes de enviar.';
+                resultsDiv.style.color = 'orange';
+            }
+        });
+    </script>
 
 </body>
 </html>
